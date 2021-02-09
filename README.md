@@ -4,7 +4,7 @@ _Este proyecto tiene como objetivo ofrecer una API para ejecutar acciones sobre 
 
 ### Pre-requisitos
 
-_Instalar Node.js y MYSQL. Opcional: Mysql Workbench o cualquier gestor gráfico de DB para Mysql. Luego de instalar MySql, utilizar el script ubicado en data-model/table-creation.sql para crear la DB y sus tablas._
+_Instalar Node.js y MYSQL. Opcional: Mysql Workbench o cualquier gestor gráfico de DB para Mysql. Luego de instalar MySql, utilizar el script ubicado en data-model/table-creation.sql para crear la DB y sus tablas. También recuera establecer en el archivo "index.js" los datos de conexión a tu DB local._
 
 ### Instalación
 

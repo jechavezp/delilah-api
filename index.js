@@ -10,7 +10,7 @@ const myJWTSecretKey = 'a61twg283e328das';
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'Dr4c0n1.*2030*.',
+    password: '',
     database: 'delilah'
 });
 
