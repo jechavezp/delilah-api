@@ -66,6 +66,7 @@ app.get('/productos', (req, res) => {
 app.post('/productos/:operacion/', tokenVerify, isAdminUser, (req, res) => {    
      
     const {
+        PRODUCT_ID,
         PRODUCT_NAME,
         PRODUCT_PRICE,
         PRODUCT_IMAGE, 
@@ -81,27 +82,17 @@ app.post('/productos/:operacion/', tokenVerify, isAdminUser, (req, res) => {
                 }
             );         
         break;
-        case 'remove':                        
-            let stringCondition = "";
-            const conditionsName = ["PRODUCT_NAME", "PRODUCT_PRICE", "PRODUCT_IMAGE"];
-            const conditionsValue = [PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_IMAGE];
-
-            conditionsValue.forEach( (condition, index) => {                
-                if (condition !== undefined) {
-                    
-                    if (stringCondition === "") {
-                        stringCondition = "WHERE " + conditionsName[index] + " = '" + conditionsValue[index]  + "'";
-                    } else {
-                        stringCondition = stringCondition + " AND " + conditionsName[index] + " = '" + conditionsValue[index] + "'";
-                    }
-
-                };
-            });            
+        case 'remove':                                               
             connection.query(
-                "DELETE FROM products " + stringCondition,
+                "DELETE FROM products WHERE ID " + " = '" + PRODUCT_ID + "'",
                 function(err, results, fields) {
-                    res.json(results);
-                    //console.log(stringCondition);
+                    if(err){
+                        res.json({Error: "no es posible eliminar el producto. Revise la consola para más detalles"});
+                        console.log(err);
+                    }
+                    else{
+                        res.json(results);                        
+                    }                    
                 }
             );
         break;
@@ -109,32 +100,6 @@ app.post('/productos/:operacion/', tokenVerify, isAdminUser, (req, res) => {
             if (WHERE === undefined) {
                 res.json( { error: "Debe indicar una condición" } )
             }
-
-            let updateStringCondition = "";
-            const updateConditionsName = [
-                                            "PRODUCT_NAME", 
-                                            "PRODUCT_PRICE", 
-                                            "PRODUCT_IMAGE",
-                                            "ID"
-                                        ];
- 
-            const updateConditionsValue = [
-                                            WHERE.PRODUCT_NAME || undefined, 
-                                            WHERE.PRODUCT_PRICE || undefined, 
-                                            WHERE.PRODUCT_IMAGE || undefined,
-                                            WHERE.ID || undefined,
-                                        ];
-
-            updateConditionsValue.forEach( (condition, index) => {
-
-                if (condition !== undefined) {
-                    if (updateStringCondition === "") {
-                        updateStringCondition = " WHERE " + updateConditionsName[index] + " = '" + updateConditionsValue[index]  + "'";
-                    } else {
-                        updateStringCondition = updateStringCondition + " AND " + updateConditionsName[index] + " = '" + updateConditionsValue[index] + "'";
-                    }  
-                }
-            });
 
             let changeString = "";
             const changeRequestName = ["PRODUCT_NAME", "PRODUCT_PRICE", "PRODUCT_IMAGE"];
@@ -152,9 +117,16 @@ app.post('/productos/:operacion/', tokenVerify, isAdminUser, (req, res) => {
             });
 
             connection.query(
-                "UPDATE products " + changeString + updateStringCondition,
+                "UPDATE products " + changeString + "WHERE ID " + " = '" + WHERE.ID + "'",
                 function(err, results, fields) {
-                    res.json(results);
+                    if(err){
+                        res.json({Error: "no fue posible actualizar el producto. Revise la consola para más detalles"})
+                        console.log(err);
+                    }
+                    else{
+                        res.json(results);                    
+                    }
+                    
                 }
             );                        
         break;        
@@ -279,12 +251,16 @@ app.post('/user/login', (req, res) => {
 });
 
 app.post('/order/create', tokenVerify, (req, res) => {
-     
-    const {
-        PAGO,
+    
+    let id_enc;
+    let ResEnc;
+    let ResDet ="";
+    let acum =0;
+
+    const {        
         DIRECCION,
         PRODUCTOS
-    } = req.body;   
+    } = req.body; 
 
     const ESTADO = "NUEVO";
     
@@ -293,41 +269,71 @@ app.post('/order/create', tokenVerify, (req, res) => {
     const minutes = date.getMinutes();
 
     const HOUR = hour + ":" + minutes;
-
-    const productID = Object.keys(PRODUCTOS)
-    let stringCondition, productsData;
-    let descriptionString = "";
-
+    
+    const productID = Object.keys(PRODUCTOS)    
+    let stringCondition, productsData;    
+    
     productID.forEach( (condition, index) => {        
         if (index === 0) {
-            stringCondition = " WHERE ID =" + condition;
+            stringCondition = " WHERE ID =" + condition;            
         } else {
-            stringCondition = stringCondition + " OR ID =" + condition;
+            stringCondition = stringCondition + " OR ID =" + condition;            
         };
-    });
+    });   
 
-    connection.query("SELECT * FROM products" + stringCondition, (err, results, fields) => {
-        productsData = results;
-        
-        let productList =  {};
-
-        productsData.forEach( productListItems => {
-            productList[productListItems.ID] = productListItems.PRODUCT_NAME;
-        })
-       
-        productID.forEach( id => {
-            descriptionString +=  PRODUCTOS[id].QNT + "x " + productList[id] + " ";
-        })
-
-        connection.query(
-            "INSERT INTO pedidos (ESTADO, HORA, DESCRIPCION, PAGO, USUARIO, DIRECCION) VALUES ('"+ESTADO+"', '"+HOUR+"', '"+descriptionString+"', '"+PAGO+"', '"+req.USER_DATA.ID+"', '"+DIRECCION+"');",
-            function(err, results, fields) {
-                if(err) {
-                    console.log(err)
-                }
-                res.json(results);
+    connection.query(
+        "INSERT INTO pedidos (ESTADO, HORA, USUARIO, DIRECCION) VALUES ('"+ESTADO+"', '"+HOUR+"', '"+req.USER_DATA.ID+"', '"+DIRECCION+"');",                        
+        function(err, results) {
+            if(err) {
+                console.log(err)
+                ResEnc = "hubo un error al guardar el pedido. Revise la consola.";
             }
-        );
+            else{
+                ResEnc = "Registro almacenado con éxito";                
+                id_enc = results.insertId;
+            }                               
+        },            
+    );
+
+    connection.query("SELECT * FROM products" + stringCondition, (err, results, fields) => {        
+        productsData = results;                
+            
+        let productPrice =  {};
+    
+        productsData.forEach( productPriceItems => {
+            productPrice[productPriceItems.ID] = productPriceItems.PRODUCT_PRICE;
+        })
+        
+        let cond = productID.length -1                
+        productID.forEach( id => {  
+            connection.query(
+            "INSERT INTO pedidos_detalle (id_pedido, id_producto, cantidad, precio) VALUES ('"+id_enc+"', '"+id+"', '"+PRODUCTOS[id].QNT+"', '"+productPrice[id]+"');",
+            function(err, results) {
+                if(err) {                    
+                    console.log(err);
+                    ResEnc = "Es necesario anular este pedido."
+                        ResDet = "hubo un error al guardar el pedido. Revise la consola";
+                        console.log(err);
+                        res.json(
+                            {Encabezado: ResEnc,
+                             Detalle: ResDet
+                            }            
+                        );
+                }
+                else {                  
+                    if(acum == cond){
+                        ResDet = "Registro almacenado con Éxito";
+                        res.json(
+                            {Encabezado: ResEnc,
+                             Detalle: ResDet
+                            }            
+                        );
+                    }                                       
+                }
+                acum++;                
+            }
+        );                        
+        })                                
     });
 });
 
@@ -338,7 +344,8 @@ app.get('/order', tokenVerify, (req, res) => {
         ROLE,
     } = req.USER_DATA;
 
-    let QUERY = 'SELECT * FROM `pedidos`';
+    let QUERY = 'SELECT * FROM `pedidos`';   
+
     if (ROLE !== "admin") {
         QUERY = QUERY + " WHERE USUARIO = '" + ID + "'";
     }

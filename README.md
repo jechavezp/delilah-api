@@ -118,14 +118,13 @@ _[GET] localhost:9090/productos_
 ```
 ### 5. Eliminar un producto
 
-_Solo el rol "admin" puede ejecutar esta acción. Por lo tanto, debes usar el respectivo Token. Puedes usar "PRODUCT_NAME", "PRODUCT_PRICE" o "PRODUCT_IMAGE"._
+_Solo el rol "admin" puede ejecutar esta acción. Por lo tanto, debes usar el respectivo Token. Debes usar "PRODUCT_ID". El producto no podrá ser eliminado si ya esta referenciado en un pedido (por temas de integridad de información)._
 
 _[POST] localhost:9090/productos/remove_
 
 ```
 {	
-	"PRODUCT_NAME": "Fraid Potato",
-	"PRODUCT_PRICE": "8000", 	 	 		
+	"PRODUCT_ID": "6",	 	 	 		
 	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiVVNFUl9OQU1FIjoiamhvbmZpIiwiRU1BSUwiOiJqaG9uZmVjaGF2ZXpAZ21haWwuY29tIiwiUk9MRSI6ImFkbWluIiwiaWF0IjoxNjEyODMyNjkxfQ.9I13VAJtf-wHpJHl4L5rPEcDPQerjqf8YXKSd56APgI"
 }
 ```
@@ -142,17 +141,28 @@ _[POST] localhost:9090/productos/remove_
     }
 ```
 
+## Ejemplo de respuesta no exitosa (/productos/remove)
+
+```{
+  "Error": "no es posible eliminar el producto. Revise la consola para más detalles"
+   }
+```
+
 ### 6. Modificar un producto
+
+_Solo el rol "admin" puede ejecutar esta acción. Por lo tanto, debes usar el respectivo Token. Puedes modificar los campos "PRODUCT_IMAGE", "PRODUCT_PRICE" y "PRODUCT_NAME". Esto solo usando el "ID" del producto._
 
 _[POST] localhost:9090/productos/update_
 
 ```
 {	
-	"PRODUCT_PRICE": "18900",
+	"PRODUCT_IMAGE": "https://loquesea.com",
+	"PRODUCT_PRICE": "7700",
+	"PRODUCT_NAME": "French fries",
 	"WHERE" : {            
-            "PRODUCT_NAME" : "pizza-dominos"             
+            "ID" : "1"             
         },
-"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiVVNFUl9OQU1FIjoibHV6bWkiLCJFTUFJTCI6Imx1emJvbmlsbGFAZ21haWwuY29tIiwiUk9MRSI6InVzZXIiLCJpYXQiOjE2MTI4MzEyNzV9.7be8tTGIuvb118w9h0YCCdhRzeeXEPPtdNJbwikElQs"
+"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiVVNFUl9OQU1FIjoiamhvbmZpIiwiRU1BSUwiOiJqaG9uZmVjaGF2ZXpAZ21haWwuY29tIiwiUk9MRSI6ImFkbWluIiwiaWF0IjoxNjEyODMyNjkxfQ.9I13VAJtf-wHpJHl4L5rPEcDPQerjqf8YXKSd56APgI"
 }
 ```
 

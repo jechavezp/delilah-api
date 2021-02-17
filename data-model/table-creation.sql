@@ -22,9 +22,27 @@
     CREATE TABLE IF NOT EXISTS pedidos (
         ID INT AUTO_INCREMENT PRIMARY KEY,
         ESTADO ENUM('NUEVO', 'CONFIRMADO', 'PREPARANDO', 'ENVIANDO', 'CANCELADO', 'ENTREGADO'),
-        HORA VARCHAR(30),
-        DESCRIPCION TEXT,
-        PAGO FLOAT,
+        HORA VARCHAR(30),                
         USUARIO INT,
         DIRECCION VARCHAR(100)
     );
+
+CREATE TABLE IF NOT EXISTS pedidos_detalle (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `id_pedido` INT NOT NULL,
+  `id_producto` INT NOT NULL,
+  `cantidad` INT NULL,
+  `precio` FLOAT NULL,
+  PRIMARY KEY (`id`, `id_pedido`),
+  INDEX `pedido_encabezado_idx` (`id_pedido` ASC) VISIBLE,
+  INDEX `pedido_producto_idx` (`id_producto` ASC) VISIBLE,
+  CONSTRAINT `pedido_encabezado`
+    FOREIGN KEY (`id_pedido`)
+    REFERENCES `delilah`.`pedidos` (`ID`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT,
+  CONSTRAINT `pedido_producto`
+    FOREIGN KEY (`id_producto`)
+    REFERENCES `delilah`.`products` (`ID`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT);
